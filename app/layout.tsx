@@ -10,8 +10,8 @@ import { env } from "../lib/env";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "The Roost",
-  description: "Procurement marketplace for restaurants, built on Blackbird.",
+  title: "Breadwinner",
+  description: "Breadwinner — procurement marketplace for restaurants, built on Blackbird.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
