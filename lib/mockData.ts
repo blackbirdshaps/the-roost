@@ -45,6 +45,19 @@ export const MOCK_REQUESTS = [
   },
 ]
 
+export const MOCK_PANTRY = [
+  { id: 'p1', name: 'Yukon Gold Potatoes', category: 'produce', default_quantity: '50 lbs', seasonal: false, notes: '', created_at: new Date(Date.now() - 86400000).toISOString() },
+  { id: 'p2', name: 'Chicken Breast', category: 'protein', default_quantity: '60 lbs', seasonal: false, notes: 'Air-chilled preferred', created_at: new Date(Date.now() - 172800000).toISOString() },
+  { id: 'p3', name: 'Heavy Cream', category: 'dairy', default_quantity: '8 gal', seasonal: false, notes: '', created_at: new Date(Date.now() - 259200000).toISOString() },
+  { id: 'p4', name: 'All-Purpose Flour', category: 'dry_goods', default_quantity: '100 lbs', seasonal: false, notes: '', created_at: new Date(Date.now() - 345600000).toISOString() },
+  { id: 'p5', name: 'Ramps', category: 'produce', default_quantity: '10 lbs', seasonal: true, notes: 'Spring only', created_at: new Date(Date.now() - 43200000).toISOString() },
+]
+
+export const MOCK_SPECIALS = [
+  { id: 's1', name: 'Spring Ramp Risotto', description: 'Carnaroli rice, foraged ramps, aged parmesan', price: 28, start_date: '2026-06-20', end_date: '2026-07-15', active: true, created_at: new Date(Date.now() - 86400000).toISOString() },
+  { id: 's2', name: 'Dry-Aged Ribeye Friday', description: '45-day dry-aged ribeye, bone marrow butter', price: 64, start_date: '2026-06-01', end_date: '', active: true, created_at: new Date(Date.now() - 172800000).toISOString() },
+]
+
 export const MOCK_BIDS = [
   {
     id: 'b1',

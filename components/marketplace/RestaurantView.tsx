@@ -3,12 +3,50 @@ import { useState } from 'react'
 import { useMarketplace } from '../../lib/useMarketplace'
 import { RequestCard } from './RequestCard'
 import { BidCard } from './BidCard'
+import { PantryView } from './PantryView'
+import { SpecialsView } from './SpecialsView'
 
 const CATEGORIES = ['protein', 'produce', 'dairy', 'dry_goods']
 
 type Request = ReturnType<typeof useMarketplace>['requests'][0]
+type Tab = 'requests' | 'pantry' | 'specials'
+
+const TABS: { id: Tab; label: string; icon: string }[] = [
+  { id: 'requests', label: 'Requests', icon: '📋' },
+  { id: 'pantry', label: 'Pantry', icon: '🧺' },
+  { id: 'specials', label: 'Specials', icon: '✨' },
+]
 
 export function RestaurantView() {
+  const [tab, setTab] = useState<Tab>('requests')
+
+  return (
+    <div>
+      <div className="flex gap-1 mb-7 border-b border-white/8">
+        {TABS.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium -mb-px border-b-2 transition-all ${
+              tab === t.id
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted hover:text-foreground'
+            }`}
+          >
+            <span className="text-[13px]">{t.icon}</span>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'requests' && <RequestsBoard />}
+      {tab === 'pantry' && <PantryView />}
+      {tab === 'specials' && <SpecialsView />}
+    </div>
+  )
+}
+
+function RequestsBoard() {
   const { requests, addRequest, awardBid, getBidsForRequest } = useMarketplace()
   const [selected, setSelected] = useState<Request | null>(null)
   const [showForm, setShowForm] = useState(false)
