@@ -1,9 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { RestaurantView } from './RestaurantView'
 import { PurveyorView } from './PurveyorView'
 
-export function Marketplace() {
+export function Marketplace({ authSlot }: { authSlot?: ReactNode }) {
   const [role, setRole] = useState<'restaurant' | 'purveyor'>('restaurant')
 
   return (
@@ -48,6 +48,8 @@ export function Marketplace() {
             <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
             Live
           </div>
+
+          {authSlot}
         </div>
       </nav>
 
