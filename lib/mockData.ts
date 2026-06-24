@@ -171,12 +171,104 @@ export const MOCK_OFFERINGS: Offering[] = [
   },
 ]
 
-export const MOCK_PANTRY = [
-  { id: 'p1', name: 'Yukon Gold Potatoes', category: 'produce', default_quantity: '50 lbs', seasonal: false, notes: '', created_at: new Date(Date.now() - 86400000).toISOString() },
-  { id: 'p2', name: 'Chicken Breast', category: 'protein', default_quantity: '60 lbs', seasonal: false, notes: 'Air-chilled preferred', created_at: new Date(Date.now() - 172800000).toISOString() },
-  { id: 'p3', name: 'Heavy Cream', category: 'dairy', default_quantity: '8 gal', seasonal: false, notes: '', created_at: new Date(Date.now() - 259200000).toISOString() },
-  { id: 'p4', name: 'All-Purpose Flour', category: 'dry_goods', default_quantity: '100 lbs', seasonal: false, notes: '', created_at: new Date(Date.now() - 345600000).toISOString() },
-  { id: 'p5', name: 'Ramps', category: 'produce', default_quantity: '10 lbs', seasonal: true, notes: 'Spring only', created_at: new Date(Date.now() - 43200000).toISOString() },
+// A staple ingredient the kitchen reorders. Optional usage_* fields capture a
+// consumption rate ("50 lb every 2 days") that powers reorder suggestions.
+export interface PantryItem {
+  id: string
+  name: string
+  category: string
+  default_quantity: string
+  seasonal: boolean
+  notes: string
+  created_at: string
+  usage_qty?: number
+  usage_unit?: string
+  usage_period_days?: number
+}
+
+export const MOCK_PANTRY: PantryItem[] = [
+  { id: 'pn1', name: 'Cultured Butter', category: 'dairy', default_quantity: '50 lbs', seasonal: false, notes: 'European-style, unsalted', created_at: new Date(Date.now() - 86400000).toISOString(), usage_qty: 50, usage_unit: 'lb', usage_period_days: 2 },
+  { id: 'pn2', name: 'Heavy Cream', category: 'dairy', default_quantity: '8 gal', seasonal: false, notes: '', created_at: new Date(Date.now() - 259200000).toISOString(), usage_qty: 8, usage_unit: 'gal', usage_period_days: 3 },
+  { id: 'pn3', name: 'Chicken Breast', category: 'protein', default_quantity: '60 lbs', seasonal: false, notes: 'Air-chilled preferred', created_at: new Date(Date.now() - 172800000).toISOString(), usage_qty: 60, usage_unit: 'lb', usage_period_days: 4 },
+  { id: 'pn4', name: 'All-Purpose Flour', category: 'dry_goods', default_quantity: '100 lbs', seasonal: false, notes: '', created_at: new Date(Date.now() - 345600000).toISOString(), usage_qty: 100, usage_unit: 'lb', usage_period_days: 7 },
+  { id: 'pn5', name: 'Yukon Gold Potatoes', category: 'produce', default_quantity: '50 lbs', seasonal: false, notes: '', created_at: new Date(Date.now() - 43200000).toISOString() },
+  { id: 'pn6', name: 'Ramps', category: 'produce', default_quantity: '10 lbs', seasonal: true, notes: 'Spring only', created_at: new Date(Date.now() - 43200000).toISOString() },
+]
+
+// ---------------------------------------------------------------------------
+// Recipes: a dish and the ingredients it draws on.
+// ---------------------------------------------------------------------------
+export interface RecipeIngredient { name: string; category: string; quantity: string }
+export interface Recipe {
+  id: string
+  name: string
+  yield_text?: string
+  ingredients: RecipeIngredient[]
+  notes?: string
+  created_at: string
+}
+
+export const MOCK_RECIPES: Recipe[] = [
+  {
+    id: 'r1', name: 'Brown Butter Gnocchi', yield_text: '40 portions',
+    ingredients: [
+      { name: 'Cultured Butter', category: 'dairy', quantity: '6 lb' },
+      { name: 'Yukon Gold Potatoes', category: 'produce', quantity: '20 lb' },
+      { name: 'All-Purpose Flour', category: 'dry_goods', quantity: '8 lb' },
+    ],
+    notes: 'Friday special',
+    created_at: new Date(Date.now() - 90000000).toISOString(),
+  },
+  {
+    id: 'r2', name: 'Roast Chicken Plate', yield_text: '24 portions',
+    ingredients: [
+      { name: 'Chicken Breast', category: 'protein', quantity: '24 lb' },
+      { name: 'Cultured Butter', category: 'dairy', quantity: '3 lb' },
+      { name: 'Heavy Cream', category: 'dairy', quantity: '2 gal' },
+    ],
+    created_at: new Date(Date.now() - 180000000).toISOString(),
+  },
+]
+
+// ---------------------------------------------------------------------------
+// Subscriptions: a restaurant commits to a recurring volume; purveyors pitch a
+// discounted recurring price, and the restaurant awards the best deal.
+// ---------------------------------------------------------------------------
+export interface Subscription {
+  id: string
+  restaurant_name: string
+  item: string
+  category: string
+  qty_per_week: number
+  unit: string
+  weeks: number
+  notes?: string
+  status: 'open' | 'awarded'
+  created_at: string
+}
+
+export interface SubBid {
+  id: string
+  subscription_id: string
+  purveyor_name: string
+  price_per_unit: number
+  unit: string
+  notes?: string
+  status: 'pending' | 'winner' | 'loser'
+  created_at: string
+}
+
+export const MOCK_SUBSCRIPTIONS: Subscription[] = [
+  {
+    id: 'sub1', restaurant_name: 'The Larder', item: 'Cultured Butter', category: 'dairy',
+    qty_per_week: 100, unit: 'lb', weeks: 12, notes: 'European-style, unsalted preferred',
+    status: 'open', created_at: new Date(Date.now() - 7200000).toISOString(),
+  },
+]
+
+export const MOCK_SUB_BIDS: SubBid[] = [
+  { id: 'sb1', subscription_id: 'sub1', purveyor_name: 'Golden Valley Dairy Co.', price_per_unit: 6.4, unit: 'lb', notes: '12-week lock, weekly delivery', status: 'pending', created_at: new Date(Date.now() - 3600000).toISOString() },
+  { id: 'sb2', subscription_id: 'sub1', purveyor_name: "Rachel's Farm Stand", price_per_unit: 6.75, unit: 'lb', notes: 'Small-batch, includes 2 free sample lbs', status: 'pending', created_at: new Date(Date.now() - 1800000).toISOString() },
 ]
 
 // Purveyor Storefront: each row is one purveyor offering one product at a price.

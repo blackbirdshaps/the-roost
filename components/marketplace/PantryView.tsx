@@ -14,13 +14,15 @@ const CATEGORY_COLORS: Record<string, string> = {
 const inputCls = "w-full bg-white/5 border border-white/8 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-[rgb(var(--outline))] focus:border-primary/60 focus:outline-none transition-colors"
 
 export function PantryView() {
-  const { pantry, addPantryItem, addPantryBulk, removePantryItem, addRequest } = useMarketplace()
+  const { pantry, addPantryItem, addPantryBulk, removePantryItem, addRequest, getReorderSuggestions } = useMarketplace()
   const [mode, setMode] = useState<'none' | 'single' | 'bulk'>('none')
   const [filter, setFilter] = useState('all')
   const [toast, setToast] = useState<string | null>(null)
 
+  const suggestions = getReorderSuggestions()
+
   // single add
-  const [single, setSingle] = useState({ name: '', category: 'produce', default_quantity: '', seasonal: false, notes: '' })
+  const [single, setSingle] = useState({ name: '', category: 'produce', default_quantity: '', seasonal: false, notes: '', usage_qty: '', usage_unit: 'lb', usage_period_days: '' })
   // bulk add
   const [bulkText, setBulkText] = useState('')
   const bulkPreview = parseBulkPantry(bulkText)
@@ -34,10 +36,31 @@ export function PantryView() {
 
   const handleAddSingle = (e: React.FormEvent) => {
     e.preventDefault()
-    addPantryItem(single)
-    setSingle({ name: '', category: 'produce', default_quantity: '', seasonal: false, notes: '' })
+    addPantryItem({
+      name: single.name,
+      category: single.category,
+      default_quantity: single.default_quantity,
+      seasonal: single.seasonal,
+      notes: single.notes,
+      usage_qty: single.usage_qty ? parseFloat(single.usage_qty) : undefined,
+      usage_unit: single.usage_qty ? single.usage_unit : undefined,
+      usage_period_days: single.usage_period_days ? parseFloat(single.usage_period_days) : undefined,
+    })
+    setSingle({ name: '', category: 'produce', default_quantity: '', seasonal: false, notes: '', usage_qty: '', usage_unit: 'lb', usage_period_days: '' })
     setMode('none')
     flash('Added to pantry')
+  }
+
+  const handleOrderSuggestion = (s: { item: string; category: string; suggestQty: number; unit: string; orderBy: string }) => {
+    addRequest({
+      restaurant_name: '',
+      category: s.category,
+      item: s.item,
+      quantity: `${s.suggestQty} ${s.unit}`,
+      needed_by: s.orderBy,
+      notes: 'Auto-suggested reorder based on usage rate',
+    })
+    flash(`Reorder request created for ${s.item} — see the Requests tab`)
   }
 
   const handleAddBulk = () => {
@@ -153,6 +176,19 @@ export function PantryView() {
             <Field label="Notes">
               <input className={inputCls} placeholder="Sourcing preferences, specs..." value={single.notes} onChange={e => setSingle(s => ({ ...s, notes: e.target.value }))} />
             </Field>
+            <div className="rounded-lg border border-white/8 bg-black/15 p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted mb-2">Usage rate <span className="font-normal normal-case text-[rgb(var(--outline))]">(optional — powers reorder suggestions)</span></p>
+              <div className="flex items-end gap-2 flex-wrap text-sm text-muted">
+                <span>We go through</span>
+                <input type="number" step="0.1" min="0" className={`${inputCls} w-20`} placeholder="50" value={single.usage_qty} onChange={e => setSingle(s => ({ ...s, usage_qty: e.target.value }))} />
+                <select className={`${inputCls} w-24`} value={single.usage_unit} onChange={e => setSingle(s => ({ ...s, usage_unit: e.target.value }))}>
+                  {['lb', 'oz', 'kg', 'gal', 'unit', 'case', 'flat'].map(u => <option key={u} value={u}>{u}</option>)}
+                </select>
+                <span>every</span>
+                <input type="number" step="1" min="1" className={`${inputCls} w-20`} placeholder="2" value={single.usage_period_days} onChange={e => setSingle(s => ({ ...s, usage_period_days: e.target.value }))} />
+                <span>days</span>
+              </div>
+            </div>
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 text-sm text-muted cursor-pointer select-none">
                 <input type="checkbox" className="accent-[rgb(var(--core-primary))] w-4 h-4" checked={single.seasonal} onChange={e => setSingle(s => ({ ...s, seasonal: e.target.checked }))} />
@@ -163,6 +199,37 @@ export function PantryView() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Suggested orders */}
+      {suggestions.length > 0 && (
+        <div className="rounded-xl border border-primary/25 bg-primary/5 p-5 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-base">📅</span>
+            <p className="text-sm font-semibold text-foreground">Suggested orders</p>
+            <span className="text-[11px] text-muted">based on your usage rates</span>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            {suggestions.map(s => (
+              <div key={s.id} className="flex items-center gap-3 rounded-lg border border-white/8 bg-[rgb(var(--surface-container-low))] px-4 py-3">
+                <span className="text-lg w-6 text-center">{CATEGORY_ICONS[s.category]}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-foreground">
+                    Order ~{s.suggestQty} {s.unit} of {s.item}
+                    <span className="text-muted font-normal"> · by {s.orderBy}</span>
+                  </div>
+                  <p className="text-xs text-muted mt-0.5">{s.rationale}</p>
+                </div>
+                <button
+                  onClick={() => handleOrderSuggestion(s)}
+                  className="px-3 py-1.5 text-xs font-semibold bg-primary text-black rounded-lg hover:opacity-90 transition-opacity flex-shrink-0"
+                >
+                  Order now
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -195,6 +262,11 @@ export function PantryView() {
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-foreground truncate">{item.name}</span>
                   {item.seasonal && <span className="text-[9px] font-bold uppercase tracking-wider bg-yellow-500/15 text-yellow-400 px-1.5 py-0.5 rounded-full">Seasonal</span>}
+                  {item.usage_qty && item.usage_period_days && (
+                    <span className="text-[9px] font-bold uppercase tracking-wider bg-primary/15 text-primary-bright px-1.5 py-0.5 rounded-full">
+                      {item.usage_qty} {item.usage_unit} / {item.usage_period_days}d
+                    </span>
+                  )}
                 </div>
                 {item.notes && <span className="text-xs text-muted">{item.notes}</span>}
               </div>

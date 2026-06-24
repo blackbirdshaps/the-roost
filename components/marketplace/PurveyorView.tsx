@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useMarketplace } from '../../lib/useMarketplace'
 import { OfferingCard } from './OfferingCard'
+import { PurveyorSubscriptionsView } from './PurveyorSubscriptionsView'
 import {
   type Grade,
   type Availability,
@@ -39,6 +40,7 @@ const blankForm = {
 export function PurveyorView() {
   const { purveyors, getOfferingsForPurveyor, addOffering } = useMarketplace()
   const [activeId, setActiveId] = useState(purveyors[0]?.id ?? '')
+  const [view, setView] = useState<'storefront' | 'subscriptions'>('storefront')
   const [showForm, setShowForm] = useState(false)
   const [justAdded, setJustAdded] = useState(false)
   const [form, setForm] = useState(blankForm)
@@ -102,6 +104,14 @@ export function PurveyorView() {
 
       {active && (
         <>
+          {/* Sub-tab: storefront vs subscriptions */}
+          <div className="flex items-center gap-2 mb-5 bg-white/5 border border-white/8 rounded-xl p-1 w-fit">
+            <button onClick={() => setView('storefront')} className={`px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-all ${view === 'storefront' ? 'bg-[rgb(var(--surface-container-high))] text-foreground shadow-sm' : 'text-muted hover:text-foreground'}`}>🧺 My Storefront</button>
+            <button onClick={() => setView('subscriptions')} className={`px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-all ${view === 'subscriptions' ? 'bg-[rgb(var(--surface-container-high))] text-foreground shadow-sm' : 'text-muted hover:text-foreground'}`}>🔁 Subscription offers</button>
+          </div>
+
+          {view === 'storefront' && (
+            <>
           {/* Storefront header */}
           <div className="rounded-xl border border-white/8 bg-[rgb(var(--surface-container-low))] p-5 mb-5 flex items-start gap-4">
             <div className="w-14 h-14 rounded-xl bg-white/5 flex items-center justify-center text-3xl flex-shrink-0">
@@ -230,6 +240,10 @@ export function PurveyorView() {
               {offerings.map(o => <OfferingCard key={o.id} offering={o} />)}
             </div>
           )}
+            </>
+          )}
+
+          {view === 'subscriptions' && <PurveyorSubscriptionsView purveyorName={active.name} />}
         </>
       )}
     </div>

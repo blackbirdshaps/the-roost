@@ -7,17 +7,21 @@ import { PantryView } from './PantryView'
 import { SpecialsView } from './SpecialsView'
 import { StorefrontView } from './StorefrontView'
 import { BrowsePurveyorsView } from './BrowsePurveyorsView'
+import { RecipesView } from './RecipesView'
+import { SubscriptionsView } from './SubscriptionsView'
 
 const CATEGORIES = ['protein', 'produce', 'dairy', 'dry_goods']
 
 type Request = ReturnType<typeof useMarketplace>['requests'][0]
-type Tab = 'requests' | 'purveyors' | 'storefront' | 'pantry' | 'specials'
+type Tab = 'requests' | 'pantry' | 'recipes' | 'subscriptions' | 'purveyors' | 'storefront' | 'specials'
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'requests', label: 'Requests', icon: '📋' },
+  { id: 'pantry', label: 'Pantry', icon: '🧺' },
+  { id: 'recipes', label: 'Recipes', icon: '📖' },
+  { id: 'subscriptions', label: 'Subscriptions', icon: '🔁' },
   { id: 'purveyors', label: 'Purveyors', icon: '🧑‍🌾' },
   { id: 'storefront', label: 'Storefront', icon: '🛒' },
-  { id: 'pantry', label: 'Pantry', icon: '🧺' },
   { id: 'specials', label: 'Specials', icon: '✨' },
 ]
 
@@ -44,9 +48,11 @@ export function RestaurantView() {
       </div>
 
       {tab === 'requests' && <RequestsBoard />}
+      {tab === 'pantry' && <PantryView />}
+      {tab === 'recipes' && <RecipesView />}
+      {tab === 'subscriptions' && <SubscriptionsView />}
       {tab === 'purveyors' && <BrowsePurveyorsView />}
       {tab === 'storefront' && <StorefrontView />}
-      {tab === 'pantry' && <PantryView />}
       {tab === 'specials' && <SpecialsView />}
     </div>
   )

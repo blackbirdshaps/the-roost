@@ -1,15 +1,22 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { MOCK_REQUESTS, MOCK_BIDS, MOCK_PURVEYORS, MOCK_OFFERINGS, MOCK_PANTRY, MOCK_SPECIALS, MOCK_STOREFRONT, type Offering } from './mockData'
+import {
+  MOCK_REQUESTS, MOCK_BIDS, MOCK_PURVEYORS, MOCK_OFFERINGS, MOCK_PANTRY,
+  MOCK_SPECIALS, MOCK_STOREFRONT, MOCK_RECIPES, MOCK_SUBSCRIPTIONS, MOCK_SUB_BIDS,
+  type Offering, type PantryItem, type Recipe, type Subscription, type SubBid,
+} from './mockData'
 
 const CATEGORIES = ['protein', 'produce', 'dairy', 'dry_goods']
 
 let _requests = [...MOCK_REQUESTS]
 let _bids = [...MOCK_BIDS]
 let _offerings: Offering[] = [...MOCK_OFFERINGS]
-let _pantry = [...MOCK_PANTRY]
+let _pantry: PantryItem[] = [...MOCK_PANTRY]
 let _specials = [...MOCK_SPECIALS]
 const _storefront = [...MOCK_STOREFRONT]
+let _recipes: Recipe[] = [...MOCK_RECIPES]
+let _subscriptions: Subscription[] = [...MOCK_SUBSCRIPTIONS]
+let _subBids: SubBid[] = [...MOCK_SUB_BIDS]
 let _listeners: Array<() => void> = []
 
 function notifyListeners() {
@@ -56,6 +63,9 @@ export function useMarketplace() {
   const [offerings, setOfferings] = useState(_offerings)
   const [pantry, setPantry] = useState(_pantry)
   const [specials, setSpecials] = useState(_specials)
+  const [recipes, setRecipes] = useState(_recipes)
+  const [subscriptions, setSubscriptions] = useState(_subscriptions)
+  const [subBids, setSubBids] = useState(_subBids)
 
   const refresh = useCallback(() => {
     setRequests([..._requests])
@@ -63,6 +73,9 @@ export function useMarketplace() {
     setOfferings([..._offerings])
     setPantry([..._pantry])
     setSpecials([..._specials])
+    setRecipes([..._recipes])
+    setSubscriptions([..._subscriptions])
+    setSubBids([..._subBids])
   }, [])
 
   useEffect(() => {
@@ -104,8 +117,8 @@ export function useMarketplace() {
     offerings.filter(o => o.purveyor_id === purveyorId)
 
   // --- Pantry ---
-  const addPantryItem = (data: { name: string; category: string; default_quantity: string; seasonal?: boolean; notes?: string }) => {
-    const item = {
+  const addPantryItem = (data: { name: string; category: string; default_quantity: string; seasonal?: boolean; notes?: string; usage_qty?: number; usage_unit?: string; usage_period_days?: number }) => {
+    const item: PantryItem = {
       id: 'p' + Date.now(),
       name: data.name,
       category: data.category,
@@ -113,6 +126,9 @@ export function useMarketplace() {
       seasonal: data.seasonal ?? false,
       notes: data.notes ?? '',
       created_at: new Date().toISOString(),
+      usage_qty: data.usage_qty,
+      usage_unit: data.usage_unit,
+      usage_period_days: data.usage_period_days,
     }
     _pantry = [item, ..._pantry]
     notifyListeners()
@@ -165,12 +181,75 @@ export function useMarketplace() {
     notifyListeners()
   }
 
+  // --- Recipes ---
+  const addRecipe = (data: Omit<Recipe, 'id' | 'created_at'>) => {
+    const recipe: Recipe = { ...data, id: 'r' + Date.now(), created_at: new Date().toISOString() }
+    _recipes = [recipe, ..._recipes]
+    notifyListeners()
+  }
+
+  const removeRecipe = (id: string) => {
+    _recipes = _recipes.filter(r => r.id !== id)
+    notifyListeners()
+  }
+
+  // --- Subscriptions ---
+  const addSubscription = (data: Omit<Subscription, 'id' | 'status' | 'created_at'>) => {
+    const sub: Subscription = { ...data, id: 'sub' + Date.now(), status: 'open', created_at: new Date().toISOString() }
+    _subscriptions = [sub, ..._subscriptions]
+    notifyListeners()
+  }
+
+  const addSubBid = (data: Omit<SubBid, 'id' | 'status' | 'created_at'>) => {
+    const bid: SubBid = { ...data, id: 'sb' + Date.now(), status: 'pending', created_at: new Date().toISOString() }
+    _subBids = [bid, ..._subBids]
+    notifyListeners()
+  }
+
+  const awardSubBid = (bidId: string, subscriptionId: string) => {
+    _subBids = _subBids.map(b => {
+      if (b.subscription_id !== subscriptionId) return b
+      return { ...b, status: b.id === bidId ? 'winner' : 'loser' }
+    })
+    _subscriptions = _subscriptions.map(s => s.id === subscriptionId ? { ...s, status: 'awarded' } : s)
+    notifyListeners()
+  }
+
+  const getSubBidsForSubscription = (subscriptionId: string) =>
+    subBids.filter(b => b.subscription_id === subscriptionId).sort((a, b) => a.price_per_unit - b.price_per_unit)
+
+  // --- Reorder suggestions (derived from pantry usage rates) ---
+  // For each pantry item with a usage rate, project a week of demand and a
+  // "reorder by" date a day before the current quantity runs out.
+  const getReorderSuggestions = () =>
+    pantry
+      .filter(p => p.usage_qty && p.usage_period_days)
+      .map(p => {
+        const dailyUse = p.usage_qty! / p.usage_period_days!
+        const suggestQty = Math.ceil(dailyUse * 7)
+        const orderByDays = Math.max(1, p.usage_period_days! - 1)
+        const orderBy = new Date(Date.now() + orderByDays * 86400000).toISOString().slice(0, 10)
+        return {
+          id: p.id,
+          item: p.name,
+          category: p.category,
+          unit: p.usage_unit ?? '',
+          dailyUse: Math.round(dailyUse * 10) / 10,
+          suggestQty,
+          orderBy,
+          rationale: `Uses ~${p.usage_qty} ${p.usage_unit} every ${p.usage_period_days} day${p.usage_period_days! > 1 ? 's' : ''} (~${Math.round(dailyUse * 10) / 10} ${p.usage_unit}/day). Order ~${suggestQty} ${p.usage_unit} to cover the next week.`,
+        }
+      })
+
   return {
     requests, bids, offerings, pantry, specials, storefront: _storefront,
-    purveyors: MOCK_PURVEYORS,
+    purveyors: MOCK_PURVEYORS, recipes, subscriptions, subBids,
     addRequest, addBid, awardBid, getBidsForRequest,
     addOffering, getOfferingsForPurveyor,
     addPantryItem, addPantryBulk, removePantryItem,
     addSpecial, toggleSpecial, removeSpecial,
+    addRecipe, removeRecipe,
+    addSubscription, addSubBid, awardSubBid, getSubBidsForSubscription,
+    getReorderSuggestions,
   }
 }
