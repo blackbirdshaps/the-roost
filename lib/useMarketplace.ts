@@ -1,9 +1,10 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { MOCK_REQUESTS, MOCK_BIDS } from './mockData'
+import { MOCK_REQUESTS, MOCK_BIDS, MOCK_PURVEYORS, MOCK_OFFERINGS, type Offering } from './mockData'
 
 let _requests = [...MOCK_REQUESTS]
 let _bids = [...MOCK_BIDS]
+let _offerings: Offering[] = [...MOCK_OFFERINGS]
 let _listeners: Array<() => void> = []
 
 function notifyListeners() {
@@ -13,10 +14,12 @@ function notifyListeners() {
 export function useMarketplace() {
   const [requests, setRequests] = useState(_requests)
   const [bids, setBids] = useState(_bids)
+  const [offerings, setOfferings] = useState(_offerings)
 
   const refresh = useCallback(() => {
     setRequests([..._requests])
     setBids([..._bids])
+    setOfferings([..._offerings])
   }, [])
 
   useEffect(() => {
@@ -48,5 +51,18 @@ export function useMarketplace() {
   const getBidsForRequest = (requestId: string) =>
     bids.filter(b => b.request_id === requestId).sort((a, b) => a.price_per_unit - b.price_per_unit)
 
-  return { requests, bids, addRequest, addBid, awardBid, getBidsForRequest }
+  const addOffering = (data: Omit<Offering, 'id' | 'created_at'>) => {
+    const offering: Offering = { ...data, id: 'o' + Date.now(), created_at: new Date().toISOString() }
+    _offerings = [offering, ..._offerings]
+    notifyListeners()
+  }
+
+  const getOfferingsForPurveyor = (purveyorId: string) =>
+    offerings.filter(o => o.purveyor_id === purveyorId)
+
+  return {
+    requests, bids, offerings, purveyors: MOCK_PURVEYORS,
+    addRequest, addBid, awardBid, getBidsForRequest,
+    addOffering, getOfferingsForPurveyor,
+  }
 }
