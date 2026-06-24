@@ -17,7 +17,7 @@ export function Marketplace({ authSlot }: { authSlot?: ReactNode }) {
             </svg>
             <span className="text-[16px] font-bold tracking-tight text-foreground">Breadwinner</span>
             <span className="text-[11px] text-[rgb(var(--outline))] pl-2.5 border-l border-white/8 ml-0.5 whitespace-nowrap">
-              Procurement Marketplace
+              The Procurement Marketplace
             </span>
           </div>
 
