@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo } from 'react'
 import { useMarketplace } from '../../lib/useMarketplace'
+import { DISTRIBUTORS } from '../../lib/mockData'
 
 const CATEGORIES = ['protein', 'produce', 'dairy', 'dry_goods']
 const CATEGORY_ICONS: Record<string, string> = { protein: '🥩', produce: '🥬', dairy: '🧀', dry_goods: '🌾' }
@@ -35,7 +36,7 @@ export function StorefrontView() {
       .filter(g =>
         !q ||
         g.name.toLowerCase().includes(q) ||
-        g.offers.some(o => o.purveyor_name.toLowerCase().includes(q)),
+        g.offers.some(o => o.distributor.toLowerCase().includes(q)),
       )
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [storefront, q, filter])
@@ -53,7 +54,7 @@ export function StorefrontView() {
       item: offer.product_name,
       quantity: offer.min_order || '1',
       needed_by: neededBy,
-      notes: `Storefront request — ${offer.purveyor_name} listed at $${offer.price_per_unit.toFixed(2)}/${offer.unit}`,
+      notes: `Storefront request — ${offer.distributor} listed at $${offer.price_per_unit.toFixed(2)}/${offer.unit}`,
     })
     flash(`Request created for ${offer.product_name} — see the Requests tab`)
   }
@@ -63,7 +64,7 @@ export function StorefrontView() {
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-foreground tracking-tight">Purveyor Storefront</h2>
         <p className="text-xs text-muted mt-0.5">
-          Search a product to compare purveyors and prices
+          Search a product to see which distributors carry it in-house — and at what price
         </p>
       </div>
 
@@ -72,7 +73,7 @@ export function StorefrontView() {
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Search products or purveyors — e.g. Farm Stand Cultured Butter"
+          placeholder="Search products or distributors — e.g. Farm Stand Cultured Butter, Baldor"
           className="w-full bg-white/5 border border-white/8 rounded-lg pl-9 pr-9 py-2.5 text-sm text-foreground placeholder:text-[rgb(var(--outline))] focus:border-primary/60 focus:outline-none transition-colors"
         />
         {query && (
@@ -111,6 +112,9 @@ export function StorefrontView() {
           {products.map(product => {
             const lowest = product.offers[0]?.price_per_unit
             const highest = product.offers[product.offers.length - 1]?.price_per_unit
+            const carriedCount = DISTRIBUTORS.filter(d =>
+              product.offers.some(o => o.distributor === d.name && o.in_stock),
+            ).length
             return (
               <div key={product.name} className="rounded-xl border border-white/8 bg-[rgb(var(--surface-container-low))] overflow-hidden">
                 {/* Product header */}
@@ -119,7 +123,7 @@ export function StorefrontView() {
                   <div className="flex-1 min-w-0">
                     <div className="text-[15px] font-semibold text-foreground">{product.name}</div>
                     <div className="text-xs text-muted">
-                      {product.offers.length} purveyor{product.offers.length !== 1 ? 's' : ''}
+                      In-house at {carriedCount} of {DISTRIBUTORS.length} distributors
                       {lowest !== highest && ` · $${lowest.toFixed(2)}–$${highest.toFixed(2)}/${product.offers[0].unit}`}
                     </div>
                   </div>
@@ -128,12 +132,37 @@ export function StorefrontView() {
                   </span>
                 </div>
 
-                {/* Offers */}
+                {/* Distributor coverage strip — every tracked distributor, carried or not */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/8 border-b border-white/8">
+                  {DISTRIBUTORS.map(d => {
+                    const offer = product.offers.find(o => o.distributor === d.name)
+                    const status = !offer ? 'none' : offer.in_stock ? 'in' : 'out'
+                    return (
+                      <div key={d.name} className="bg-[rgb(var(--surface-container-low))] px-4 py-3">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className={`w-1.5 h-1.5 rounded-full ${status === 'in' ? 'bg-success' : status === 'out' ? 'bg-[rgb(var(--brand-yellow))]' : 'bg-[rgb(var(--outline))]'}`} />
+                          <span className="text-xs font-semibold text-foreground truncate">{d.name}</span>
+                        </div>
+                        {status === 'in' && (
+                          <div className="text-sm font-bold text-foreground">${offer!.price_per_unit.toFixed(2)}<span className="text-[11px] font-normal text-muted">/{offer!.unit}</span></div>
+                        )}
+                        {status === 'out' && (
+                          <div className="text-[11px] font-medium text-[rgb(var(--brand-yellow))]">Out of stock</div>
+                        )}
+                        {status === 'none' && (
+                          <div className="text-[11px] text-[rgb(var(--outline))]">Not carried</div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Offers — all carriers ranked by price */}
                 {product.offers.map((offer, i) => (
-                  <div key={offer.id} className={`flex items-center gap-4 px-5 py-3 ${i !== product.offers.length - 1 ? 'border-b border-white/8' : ''} hover:bg-white/3 transition-colors group`}>
+                  <div key={offer.id} className={`flex items-center gap-4 px-5 py-3 ${i !== product.offers.length - 1 ? 'border-b border-white/8' : ''} hover:bg-white/3 transition-colors`}>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-foreground truncate">{offer.purveyor_name}</span>
+                        <span className="text-sm font-medium text-foreground truncate">{offer.distributor}</span>
                         {i === 0 && product.offers.length > 1 && (
                           <span className="text-[9px] font-bold uppercase tracking-wider bg-success/15 text-success px-1.5 py-0.5 rounded-full">Lowest</span>
                         )}

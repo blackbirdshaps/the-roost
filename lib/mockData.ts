@@ -56,25 +56,53 @@ export const MOCK_PANTRY = [
 // Purveyor Storefront: each row is one purveyor offering one product at a price.
 // Multiple purveyors can list the same product — that's what powers price
 // comparison (search a product, see who carries it and for how much).
+// The major broadline / specialty distributors we track for in-house coverage.
+// `specialty` flags the limited-catalog houses (e.g. Pierless = seafood only),
+// which is why they won't carry every product searched.
+export const DISTRIBUTORS = [
+  { name: 'Baldor', kind: 'broadline' },
+  { name: 'Pierless Fish', kind: 'seafood' },
+  { name: 'Sysco', kind: 'broadline' },
+  { name: 'US Foods', kind: 'broadline' },
+] as const
+
+// Purveyor Storefront: each row is one distributor offering one product at a
+// price. Multiple distributors carry the same product — that's what powers both
+// price comparison and the per-product distributor coverage view (who has it
+// in-house). A distributor with no row for a product simply doesn't carry it.
 export const MOCK_STOREFRONT = [
-  // Farm Stand Cultured Butter — carried by several purveyors at different prices
-  { id: 'sf1', purveyor_name: 'Heritage Foods Supply', product_name: 'Farm Stand Cultured Butter', category: 'dairy', price_per_unit: 7.25, unit: 'lb', min_order: '20 lb', lead_time_days: 2, in_stock: true, notes: '83% butterfat, European-style' },
-  { id: 'sf2', purveyor_name: 'Golden Valley Dairy Co.', product_name: 'Farm Stand Cultured Butter', category: 'dairy', price_per_unit: 6.80, unit: 'lb', min_order: '40 lb', lead_time_days: 3, in_stock: true, notes: 'Grass-fed, made in small batches' },
-  { id: 'sf3', purveyor_name: 'Metro Restaurant Depot', product_name: 'Farm Stand Cultured Butter', category: 'dairy', price_per_unit: 7.95, unit: 'lb', min_order: '10 lb', lead_time_days: 1, in_stock: true, notes: 'Next-day delivery available' },
-  { id: 'sf4', purveyor_name: 'Coastal Farms Direct', product_name: 'Farm Stand Cultured Butter', category: 'dairy', price_per_unit: 7.10, unit: 'lb', min_order: '25 lb', lead_time_days: 4, in_stock: false, notes: 'Back in stock next week' },
+  // Farm Stand Cultured Butter (dairy) — Pierless (seafood) doesn't carry it
+  { id: 'sf1', distributor: 'Sysco', product_name: 'Farm Stand Cultured Butter', category: 'dairy', price_per_unit: 6.80, unit: 'lb', min_order: '40 lb', lead_time_days: 3, in_stock: true, notes: 'Grade AA, salted or unsalted' },
+  { id: 'sf2', distributor: 'Baldor', product_name: 'Farm Stand Cultured Butter', category: 'dairy', price_per_unit: 6.95, unit: 'lb', min_order: '20 lb', lead_time_days: 2, in_stock: true, notes: '83% butterfat, European-style' },
+  { id: 'sf3', distributor: 'US Foods', product_name: 'Farm Stand Cultured Butter', category: 'dairy', price_per_unit: 7.20, unit: 'lb', min_order: '30 lb', lead_time_days: 2, in_stock: false, notes: 'Restocking — ships in 5 days' },
 
-  // Wagyu Strip Loin
-  { id: 'sf5', purveyor_name: 'Heritage Foods Supply', product_name: 'Wagyu Strip Loin', category: 'protein', price_per_unit: 38.50, unit: 'lb', min_order: '20 lb', lead_time_days: 3, in_stock: true, notes: 'USDA Prime, 28-day dry aged' },
-  { id: 'sf6', purveyor_name: 'Pacific Rim Provisions', product_name: 'Wagyu Strip Loin', category: 'protein', price_per_unit: 34.00, unit: 'lb', min_order: '30 lb', lead_time_days: 5, in_stock: true, notes: 'Australian Wagyu, 21-day aged' },
+  // Wagyu Strip Loin (protein) — Pierless (seafood) doesn't carry it
+  { id: 'sf4', distributor: 'Sysco', product_name: 'Wagyu Strip Loin', category: 'protein', price_per_unit: 35.50, unit: 'lb', min_order: '30 lb', lead_time_days: 4, in_stock: true, notes: 'USDA Prime' },
+  { id: 'sf5', distributor: 'Baldor', product_name: 'Wagyu Strip Loin', category: 'protein', price_per_unit: 37.00, unit: 'lb', min_order: '20 lb', lead_time_days: 3, in_stock: true, notes: '28-day dry aged' },
+  { id: 'sf6', distributor: 'US Foods', product_name: 'Wagyu Strip Loin', category: 'protein', price_per_unit: 36.25, unit: 'lb', min_order: '25 lb', lead_time_days: 5, in_stock: true, notes: 'Australian Wagyu, MB5+' },
 
-  // Heirloom Tomatoes
-  { id: 'sf7', purveyor_name: 'Coastal Farms Direct', product_name: 'Heirloom Tomatoes', category: 'produce', price_per_unit: 4.20, unit: 'lb', min_order: '15 lb', lead_time_days: 1, in_stock: true, notes: 'Mixed varieties, Sonoma County' },
-  { id: 'sf8', purveyor_name: 'Green Acres Produce', product_name: 'Heirloom Tomatoes', category: 'produce', price_per_unit: 3.85, unit: 'lb', min_order: '25 lb', lead_time_days: 2, in_stock: true, notes: 'Certified organic' },
+  // Maine Mussels (protein/seafood) — Pierless's specialty; US Foods doesn't carry
+  { id: 'sf7', distributor: 'Pierless Fish', product_name: 'Maine Mussels', category: 'protein', price_per_unit: 4.50, unit: 'lb', min_order: '10 lb', lead_time_days: 1, in_stock: true, notes: 'Rope-grown, harvested daily' },
+  { id: 'sf8', distributor: 'Sysco', product_name: 'Maine Mussels', category: 'protein', price_per_unit: 4.95, unit: 'lb', min_order: '20 lb', lead_time_days: 2, in_stock: true, notes: 'PEI mussels' },
+  { id: 'sf9', distributor: 'Baldor', product_name: 'Maine Mussels', category: 'protein', price_per_unit: 5.25, unit: 'lb', min_order: '15 lb', lead_time_days: 2, in_stock: true, notes: 'Wild-harvested' },
 
-  // Single-purveyor items
-  { id: 'sf9', purveyor_name: 'Golden Valley Dairy Co.', product_name: 'Burrata', category: 'dairy', price_per_unit: 5.50, unit: 'unit', min_order: '12 units', lead_time_days: 1, in_stock: true, notes: 'Fresh daily, 4oz each' },
-  { id: 'sf10', purveyor_name: 'Pantry Wholesale', product_name: 'Arborio Rice', category: 'dry_goods', price_per_unit: 2.10, unit: 'lb', min_order: '50 lb', lead_time_days: 3, in_stock: true, notes: 'Vialone Nano available too' },
-  { id: 'sf11', purveyor_name: 'Green Acres Produce', product_name: 'Ramps', category: 'produce', price_per_unit: 12.00, unit: 'lb', min_order: '5 lb', lead_time_days: 2, in_stock: true, notes: 'Foraged, spring season only' },
+  // Heirloom Tomatoes (produce) — Baldor's strength; Pierless doesn't carry
+  { id: 'sf10', distributor: 'Baldor', product_name: 'Heirloom Tomatoes', category: 'produce', price_per_unit: 3.95, unit: 'lb', min_order: '15 lb', lead_time_days: 1, in_stock: true, notes: 'Mixed varieties, Hudson Valley' },
+  { id: 'sf11', distributor: 'Sysco', product_name: 'Heirloom Tomatoes', category: 'produce', price_per_unit: 4.10, unit: 'lb', min_order: '25 lb', lead_time_days: 2, in_stock: true, notes: 'Greenhouse-grown' },
+  { id: 'sf12', distributor: 'US Foods', product_name: 'Heirloom Tomatoes', category: 'produce', price_per_unit: 4.25, unit: 'lb', min_order: '20 lb', lead_time_days: 2, in_stock: true, notes: 'Field-grown, seasonal' },
+
+  // Burrata (dairy)
+  { id: 'sf13', distributor: 'Baldor', product_name: 'Burrata', category: 'dairy', price_per_unit: 5.25, unit: 'unit', min_order: '12 units', lead_time_days: 1, in_stock: true, notes: 'Fresh daily, 4oz each' },
+  { id: 'sf14', distributor: 'Sysco', product_name: 'Burrata', category: 'dairy', price_per_unit: 5.40, unit: 'unit', min_order: '24 units', lead_time_days: 2, in_stock: false, notes: 'Temporarily out' },
+  { id: 'sf15', distributor: 'US Foods', product_name: 'Burrata', category: 'dairy', price_per_unit: 5.60, unit: 'unit', min_order: '12 units', lead_time_days: 2, in_stock: true, notes: 'Imported, 4oz' },
+
+  // Arborio Rice (dry_goods) — broadline staple; Pierless doesn't carry
+  { id: 'sf16', distributor: 'Sysco', product_name: 'Arborio Rice', category: 'dry_goods', price_per_unit: 1.95, unit: 'lb', min_order: '50 lb', lead_time_days: 3, in_stock: true, notes: 'Imported Italian' },
+  { id: 'sf17', distributor: 'US Foods', product_name: 'Arborio Rice', category: 'dry_goods', price_per_unit: 2.05, unit: 'lb', min_order: '50 lb', lead_time_days: 3, in_stock: true, notes: 'Vialone Nano available' },
+  { id: 'sf18', distributor: 'Baldor', product_name: 'Arborio Rice', category: 'dry_goods', price_per_unit: 2.15, unit: 'lb', min_order: '25 lb', lead_time_days: 2, in_stock: true, notes: 'Carnaroli also stocked' },
+
+  // Ramps (produce) — Baldor only (seasonal specialty)
+  { id: 'sf19', distributor: 'Baldor', product_name: 'Ramps', category: 'produce', price_per_unit: 11.50, unit: 'lb', min_order: '5 lb', lead_time_days: 2, in_stock: true, notes: 'Foraged, spring season only' },
 ]
 
 export const MOCK_SPECIALS = [
