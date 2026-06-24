@@ -51,12 +51,16 @@ function RequestsBoard() {
   const [selected, setSelected] = useState<Request | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [filter, setFilter] = useState('all')
+  const [query, setQuery] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({
     restaurant_name: '', category: 'protein', item: '', quantity: '', needed_by: '', notes: '',
   })
 
-  const filtered = filter === 'all' ? requests : requests.filter(r => r.category === filter)
+  const q = query.trim().toLowerCase()
+  const filtered = requests
+    .filter(r => filter === 'all' || r.category === filter)
+    .filter(r => !q || r.item.toLowerCase().includes(q) || r.restaurant_name.toLowerCase().includes(q))
   const selectedBids = selected ? getBidsForRequest(selected.id) : []
   const hasWinner = selectedBids.some(b => b.status === 'winner')
 
@@ -130,6 +134,25 @@ function RequestsBoard() {
         </div>
       )}
 
+      <div className="relative mb-4">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm pointer-events-none">🔍</span>
+        <input
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Search items or restaurants — e.g. mussels"
+          className="w-full bg-white/5 border border-white/8 rounded-lg pl-9 pr-9 py-2 text-sm text-foreground placeholder:text-[rgb(var(--outline))] focus:border-primary/60 focus:outline-none transition-colors"
+        />
+        {query && (
+          <button
+            onClick={() => setQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[rgb(var(--outline))] hover:text-foreground text-sm"
+            title="Clear"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+
       <div className="flex gap-2 mb-5 flex-wrap">
         {['all', ...CATEGORIES].map(c => (
           <button
@@ -147,7 +170,9 @@ function RequestsBoard() {
       <div className="grid grid-cols-[340px_1fr] gap-5 items-start">
         <div className="flex flex-col gap-2.5 max-h-[calc(100vh-220px)] overflow-y-auto pr-1">
           {filtered.length === 0 ? (
-            <EmptyState icon="📋" title="No requests yet" sub="Post your first ingredient request above." />
+            q
+              ? <EmptyState icon="🔍" title="No matches" sub={`Nothing matches “${query.trim()}”. Try a different term.`} />
+              : <EmptyState icon="📋" title="No requests yet" sub="Post your first ingredient request above." />
           ) : filtered.map(req => (
             <RequestCard key={req.id} request={req} selected={selected?.id === req.id}
               onClick={() => setSelected(req)} bidCount={getBidsForRequest(req.id).length} />
