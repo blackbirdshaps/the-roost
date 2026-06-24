@@ -1,11 +1,12 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { MOCK_REQUESTS, MOCK_BIDS, MOCK_PANTRY, MOCK_SPECIALS, MOCK_STOREFRONT } from './mockData'
+import { MOCK_REQUESTS, MOCK_BIDS, MOCK_PURVEYORS, MOCK_OFFERINGS, MOCK_PANTRY, MOCK_SPECIALS, MOCK_STOREFRONT, type Offering } from './mockData'
 
 const CATEGORIES = ['protein', 'produce', 'dairy', 'dry_goods']
 
 let _requests = [...MOCK_REQUESTS]
 let _bids = [...MOCK_BIDS]
+let _offerings: Offering[] = [...MOCK_OFFERINGS]
 let _pantry = [...MOCK_PANTRY]
 let _specials = [...MOCK_SPECIALS]
 const _storefront = [...MOCK_STOREFRONT]
@@ -52,12 +53,14 @@ export function parseBulkPantry(text: string) {
 export function useMarketplace() {
   const [requests, setRequests] = useState(_requests)
   const [bids, setBids] = useState(_bids)
+  const [offerings, setOfferings] = useState(_offerings)
   const [pantry, setPantry] = useState(_pantry)
   const [specials, setSpecials] = useState(_specials)
 
   const refresh = useCallback(() => {
     setRequests([..._requests])
     setBids([..._bids])
+    setOfferings([..._offerings])
     setPantry([..._pantry])
     setSpecials([..._specials])
   }, [])
@@ -90,6 +93,15 @@ export function useMarketplace() {
 
   const getBidsForRequest = (requestId: string) =>
     bids.filter(b => b.request_id === requestId).sort((a, b) => a.price_per_unit - b.price_per_unit)
+
+  const addOffering = (data: Omit<Offering, 'id' | 'created_at'>) => {
+    const offering: Offering = { ...data, id: 'o' + Date.now(), created_at: new Date().toISOString() }
+    _offerings = [offering, ..._offerings]
+    notifyListeners()
+  }
+
+  const getOfferingsForPurveyor = (purveyorId: string) =>
+    offerings.filter(o => o.purveyor_id === purveyorId)
 
   // --- Pantry ---
   const addPantryItem = (data: { name: string; category: string; default_quantity: string; seasonal?: boolean; notes?: string }) => {
@@ -154,8 +166,10 @@ export function useMarketplace() {
   }
 
   return {
-    requests, bids, pantry, specials, storefront: _storefront,
+    requests, bids, offerings, pantry, specials, storefront: _storefront,
+    purveyors: MOCK_PURVEYORS,
     addRequest, addBid, awardBid, getBidsForRequest,
+    addOffering, getOfferingsForPurveyor,
     addPantryItem, addPantryBulk, removePantryItem,
     addSpecial, toggleSpecial, removeSpecial,
   }

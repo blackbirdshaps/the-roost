@@ -6,14 +6,16 @@ import { BidCard } from './BidCard'
 import { PantryView } from './PantryView'
 import { SpecialsView } from './SpecialsView'
 import { StorefrontView } from './StorefrontView'
+import { BrowsePurveyorsView } from './BrowsePurveyorsView'
 
 const CATEGORIES = ['protein', 'produce', 'dairy', 'dry_goods']
 
 type Request = ReturnType<typeof useMarketplace>['requests'][0]
-type Tab = 'requests' | 'storefront' | 'pantry' | 'specials'
+type Tab = 'requests' | 'purveyors' | 'storefront' | 'pantry' | 'specials'
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'requests', label: 'Requests', icon: '📋' },
+  { id: 'purveyors', label: 'Purveyors', icon: '🧑‍🌾' },
   { id: 'storefront', label: 'Storefront', icon: '🛒' },
   { id: 'pantry', label: 'Pantry', icon: '🧺' },
   { id: 'specials', label: 'Specials', icon: '✨' },
@@ -42,6 +44,7 @@ export function RestaurantView() {
       </div>
 
       {tab === 'requests' && <RequestsBoard />}
+      {tab === 'purveyors' && <BrowsePurveyorsView />}
       {tab === 'storefront' && <StorefrontView />}
       {tab === 'pantry' && <PantryView />}
       {tab === 'specials' && <SpecialsView />}
