@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { MOCK_REQUESTS, MOCK_BIDS, MOCK_PANTRY, MOCK_SPECIALS } from './mockData'
+import { MOCK_REQUESTS, MOCK_BIDS, MOCK_PANTRY, MOCK_SPECIALS, MOCK_STOREFRONT } from './mockData'
 
 const CATEGORIES = ['protein', 'produce', 'dairy', 'dry_goods']
 
@@ -8,6 +8,7 @@ let _requests = [...MOCK_REQUESTS]
 let _bids = [...MOCK_BIDS]
 let _pantry = [...MOCK_PANTRY]
 let _specials = [...MOCK_SPECIALS]
+const _storefront = [...MOCK_STOREFRONT]
 let _listeners: Array<() => void> = []
 
 function notifyListeners() {
@@ -153,7 +154,7 @@ export function useMarketplace() {
   }
 
   return {
-    requests, bids, pantry, specials,
+    requests, bids, pantry, specials, storefront: _storefront,
     addRequest, addBid, awardBid, getBidsForRequest,
     addPantryItem, addPantryBulk, removePantryItem,
     addSpecial, toggleSpecial, removeSpecial,
